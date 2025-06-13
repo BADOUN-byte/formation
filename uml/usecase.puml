@@ -1,0 +1,48 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor Admin
+actor Formateur
+actor Participant
+
+rectangle "Système de gestion des formations" {
+
+  (Créer utilisateur)
+  (Gérer les rôles)
+  (Créer formation)
+  (Joindre documents)
+  (Ajouter participants)
+  (Générer attestations)
+  (Voir formations)
+  (S'inscrire à une formation)
+  (Commenter formation)
+  (Voir ses attestations)
+  (Télécharger attestations)
+  (Gérer services et directions)
+}
+
+' Accès Admin
+Admin --> (Créer utilisateur)
+Admin --> (Gérer les rôles)
+Admin --> (Créer formation)
+Admin --> (Joindre documents)
+Admin --> (Générer attestations)
+Admin --> (Gérer services et directions)
+
+' Accès Formateur
+Formateur --> (Joindre documents)
+Formateur --> (Ajouter participants)
+Formateur --> (Commenter formation)
+Formateur --> (Voir ses attestations)
+Formateur --> (Télécharger attestations)
+
+' Accès Participant
+Participant --> (Voir formations)
+Participant --> (Commenter formation)
+Participant --> (S'inscrire à une formation)
+Participant --> (Voir ses attestations)
+Participant --> (Télécharger attestations)
+
+@enduml

@@ -1,0 +1,116 @@
+@startuml
+left to right direction
+skinparam classAttributeIconSize 0
+
+' === TABLES PRINCIPALES ===
+
+class Role {
+  +id: int
+  +nom: string
+}
+
+class User {
+  +id: int
+  +nom: string
+  +prenom: string
+  +email: string
+  +password: string
+  +matricule: string
+  +grade: string
+  +fonction: string
+  +role_id: int
+  +service_id: int
+  --
+  +participerA(f: Formation): void
+  +animerFormation(f: Formation): void
+  +commenter(f: Formation, msg: string): void
+}
+
+class Direction {
+  +id: int
+  +nom: string
+  +description: string
+}
+
+class Service {
+  +id: int
+  +nom: string
+  +description: string
+  +direction_id: int
+}
+
+class Formation {
+  +id: int
+  +type: string
+  +lieu: string
+  +description: text
+  +date_debut: Date
+  +date_fin: Date
+  +volume_horaire: int
+  +statut: string
+  +created_at: Date
+  +updated_at: Date
+  --
+  +ajouterParticipant(u: User): void
+  +retirerParticipant(u: User): void
+  +associerDocument(d: Document): void
+  +genererAttestations(): List<Attestation>
+  +listerCommentaires(): List<Commentaire>
+}
+
+class FormationUser {
+  +formation_id: int
+  +user_id: int
+  +role_in_formation: string
+}
+
+class Document {
+  +id: int
+  +formation_id: int
+  +nom: string
+  +fichier: string
+  --
+  +uploader(): void
+  +supprimer(): void
+}
+
+class Commentaire {
+  +id: int
+  +formation_id: int
+  +user_id: int
+  +titre: string
+  +message: text
+  +created_at: Date
+  --
+  +poster(): void
+  +supprimer(): void
+}
+
+class Attestation {
+  +id: int
+  +user_id: int
+  +formation_id: int
+  +date_emission: Date
+  +fichier_pdf: string
+  --
+  +genererPDF(): string
+  +telecharger(): void
+}
+
+' === RELATIONS ===
+
+Role "1" <-- "0..*" User
+Direction "1" -- "0..*" Service
+Service "1" -- "0..*" User
+
+User "1" -- "0..*" FormationUser
+Formation "1" -- "0..*" FormationUser
+
+Formation "1" -- "0..*" Document
+Formation "1" -- "0..*" Commentaire
+User "1" -- "0..*" Commentaire
+
+Formation "1" -- "0..*" Attestation
+User "1" -- "0..*" Attestation
+
+@enduml
