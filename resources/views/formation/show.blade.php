@@ -41,5 +41,13 @@
             <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
         </form>
     </div>
+    @auth
+    <form method="POST" action="{{ route('formations.inscription', $formation->id) }}">
+        @csrf
+        <button type="submit" class="btn btn-success">S'inscrire</button>
+    </form>
+@else
+    <a href="{{ route('login') }}" class="btn btn-primary">Connectez-vous pour vous inscrire</a>
+@endauth
 </div>
 @endsection
