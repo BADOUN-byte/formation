@@ -6,27 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        // Vérifie si la colonne 'role_id' n'existe pas déjà
         if (!Schema::hasColumn('users', 'role_id')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->foreignId('role_id')
-                      ->constrained()
+                      ->after('fonction')
+                      ->constrained('roles')
                       ->onDelete('cascade');
             });
         }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        // Vérifie si la colonne 'role_id' existe avant de la supprimer
         if (Schema::hasColumn('users', 'role_id')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->dropForeign(['role_id']);

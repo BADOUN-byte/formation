@@ -1,12 +1,10 @@
 <?php
 
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Formation;
 use App\Models\User;
-use App\Models\FormationUser;
 
 class FormationUserSeeder extends Seeder
 {
@@ -17,26 +15,28 @@ class FormationUserSeeder extends Seeder
         $participants = User::where('role_id', \App\Models\Role::PARTICIPANT)->get();
 
         foreach ($formations as $formation) {
-            // Affecter un formateur aléatoire à chaque formation
+            // Affecter un formateur aléatoire à chaque formation, s’il y en a
             if ($formateurs->isNotEmpty()) {
                 $formateur = $formateurs->random();
-                FormationUser::create([
-                    'formation_id' => $formation->id,
-                    'user_id' => $formateur->id,
-                    'role_in_formation' => 'formateur',
+
+                // Attach formateur avec pivot
+                $formation->users()->syncWithoutDetaching([
+                    $formateur->id => ['role_in_formation' => 'formateur']
                 ]);
             }
 
-            // Ajouter 3 à 6 participants aléatoires
-            $randomParticipants = $participants->random(rand(3, 6));
-            foreach ($randomParticipants as $participant) {
-                FormationUser::create([
-                    'formation_id' => $formation->id,
-                    'user_id' => $participant->id,
-                    'role_in_formation' => 'participant',
-                ]);
+            // Nombre de participants à affecter, limité à la taille dispo
+            $nbParticipants = min(rand(3, 6), $participants->count());
+
+            if ($nbParticipants > 0) {
+                $randomParticipants = $participants->random($nbParticipants);
+
+                foreach ($randomParticipants as $participant) {
+                    $formation->users()->syncWithoutDetaching([
+                        $participant->id => ['role_in_formation' => 'participant']
+                    ]);
+                }
             }
         }
-}
-        
+    }
 }

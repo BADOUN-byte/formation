@@ -9,13 +9,13 @@ class Comment extends Model
 {
     use HasFactory;
 
-    // Laravel attend une table "comments", donc on précise "commentaires"
     protected $table = 'commentaires';
 
     protected $fillable = [
-
         'contenu',
         'user_id',
+        'formation_id',
+        'parent_id', // si tu veux faire des réponses imbriquées
     ];
 
     /**
@@ -27,11 +27,26 @@ class Comment extends Model
     }
 
     /**
-     * (Optionnel) Ajoute cette relation si tu veux lier un commentaire à une formation
+     * Un commentaire appartient à une formation
      */
     public function formation()
     {
         return $this->belongsTo(Formation::class);
     }
-}
 
+    /**
+     * Un commentaire peut avoir des réponses (auto-relation)
+     */
+    public function reponses()
+    {
+        return $this->hasMany(Comment::class, 'parent_id');
+    }
+
+    /**
+     * Un commentaire peut avoir un parent
+     */
+    public function parent()
+    {
+        return $this->belongsTo(Comment::class, 'parent_id');
+    }
+}

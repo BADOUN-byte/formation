@@ -7,21 +7,23 @@ use App\Models\Role;
 
 class RoleSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        Role::updateOrCreate(
-            ['id' => 1],
-            ['nom' => 'admin']
-        );
+        // Tableau des rôles avec ID fixés
+        $roles = [
+            Role::ADMIN => 'admin',
+            Role::FORMATEUR => 'formateur',
+            Role::PARTICIPANT => 'participant',
+        ];
 
-        Role::updateOrCreate(
-            ['id' => 2],
-            ['nom' => 'formateur']
-        );
+        foreach ($roles as $id => $nom) {
+            $role = Role::updateOrCreate(
+                ['id' => $id],             // Forcer l'ID
+                ['nom' => $nom]            // Met à jour le nom si nécessaire
+            );
 
-        Role::updateOrCreate(
-            ['id' => 3],
-            ['nom' => 'participant']
-        );
+            $status = $role->wasRecentlyCreated ? '✅ Créé' : '🔁 Mis à jour';
+            $this->command->info("[$status] Rôle ID: $id → $nom");
+        }
     }
 }

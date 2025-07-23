@@ -10,15 +10,23 @@ class ServiceSeeder extends Seeder
 {
     public function run(): void
     {
-        $direction = Direction::first(); // Assure-toi d'avoir au moins une direction
+        $direction = Direction::first();
+
+        if (!$direction) {
+            $this->command->error('❌ Aucun direction trouvé. Veuillez d\'abord exécuter le seeder des directions.');
+            return;
+        }
 
         $services = ['Informatique', 'RH', 'Comptabilité'];
+
         foreach ($services as $nom) {
-            Service::create([
-                'nom' => $nom,
-                'description' => "Service de $nom",
-                'direction_id' => $direction->id
-            ]);
+            $service = Service::updateOrCreate(
+                ['nom' => $nom, 'direction_id' => $direction->id],
+                ['description' => "Service de $nom"]
+            );
+
+            $status = $service->wasRecentlyCreated ? '✅ Créé' : '🔁 Mis à jour';
+            $this->command->info("$status : service $nom");
         }
     }
 }

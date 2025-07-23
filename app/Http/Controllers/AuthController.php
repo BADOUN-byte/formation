@@ -7,13 +7,17 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    // Affiche le formulaire de connexion
+    /**
+     * Affiche le formulaire de connexion
+     */
     public function showLoginForm()
     {
         return view('auth.login');
     }
 
-    // Traite la connexion
+    /**
+     * Traite la connexion
+     */
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -24,15 +28,27 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            return redirect()->intended('/dashboard'); // ou la page d'accueil de ton choix
+            $user = Auth::user();
+
+            // Redirection en fonction du rôle
+            switch ($user->role->nom) {
+                case 'admin':
+                    return redirect()->route('admin.dashboard');
+                case 'formateur':
+                    return redirect()->route('dashboard');
+                default:
+                    return redirect()->route('home');
+            }
         }
 
         return back()->withErrors([
-            'email' => 'Les identifiants sont invalides.',
+            'email' => 'Adresse e-mail ou mot de passe incorrect.',
         ])->onlyInput('email');
     }
 
-    // Déconnecte l'utilisateur
+    /**
+     * Déconnecte l'utilisateur
+     */
     public function logout(Request $request)
     {
         Auth::logout();
@@ -40,6 +56,6 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/login');
+        return redirect()->route('login');
     }
 }

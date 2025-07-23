@@ -12,7 +12,7 @@ class DirectionSeeder extends Seeder
         $noms = ['DGTI', 'DESF', 'DASP', 'DSI', 'DT', 'DIG'];
 
         foreach ($noms as $nom) {
-            Direction::create(['nom' => $nom]);
+            Direction::updateOrCreate(['nom' => $nom]);
         }
     }
 }

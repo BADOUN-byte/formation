@@ -2,121 +2,121 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Direction;
-use App\Models\Formation;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Comment;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Carbon;
+use App\Models\Direction;
+use App\Models\Formation;
+use App\Models\Role;
+use App\Models\Service;
 
 class HomeController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth')->only(['home', 'dashboard']);
-    }
-
-    // 🌐 Page publique
+    /**
+     * Page d’accueil publique (non connecté)
+     */
     public function index()
     {
-        // Chargement hiérarchique limité (Eloquent + with)
-        $directions = Direction::with([
-            'services' => function ($query) {
-                $query->select('id', 'nom', 'direction_id');
-            },
-            'services.formations' => function ($query) {
-                $query->select('id', 'titre', 'date_debut', 'date_fin', 'service_id')
-                      ->latest('date_debut')
-                      ->limit(3); // on limite les formations pour chaque service
-            }
-        ])
-        ->select('id', 'nom')
-        ->limit(5)
-        ->get(); // Eager loading limité
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
 
-        // Statistiques de formation
-        $today = Carbon::today();
+        $directions = Direction::with('services.formations')->get();
+        $now = now();
 
-        $formationsPassees = Formation::where('date_fin', '<', $today)->count();
-
-        $formationsEnCours = Formation::where(function ($query) use ($today) {
-            $query->whereDate('date_debut', '<=', $today)
-                  ->whereDate('date_fin', '>=', $today);
-        })->count();
-
-        $formationsAVenir = Formation::where('date_debut', '>', $today)->count();
-
-        // Derniers commentaires
-        $comments = Comment::with('user:id,nom,prenom')
-                           ->latest()
-                           ->limit(3)
-                           ->get();
-
-        return view('welcome', compact(
-            'directions',
-            'formationsPassees',
-            'formationsEnCours',
-            'formationsAVenir',
-            'comments'
-        ));
+        return view('welcome', [
+            'directions' => $directions,
+            'formationsPassees' => Formation::where('date_fin', '<', $now)->count(),
+            'formationsEnCours' => Formation::where('date_debut', '<=', $now)->where('date_fin', '>=', $now)->count(),
+            'formationsAVenir' => Formation::where('date_debut', '>', $now)->count(),
+            'comments' => Comment::with('user:id,nom,prenom')->latest()->take(5)->get(),
+        ]);
     }
 
-    // 🏠 Page après connexion
+    /**
+     * Redirection après login
+     */
     public function home()
     {
-        $user = Auth::user();
-
-        $users = User::with('role:id,nom')
-                     ->select('id', 'nom', 'prenom', 'email', 'role_id')
-                     ->paginate(10);
-
-        $comments = Comment::with('user:id,nom,prenom')
-                           ->latest()
-                           ->take(5)
-                           ->get();
-
-        return view('home', compact('user', 'users', 'comments'));
+        return $this->dashboard();
     }
 
-    // 📊 Tableau de bord
+    /**
+     * Tableau de bord unifié
+     */
     public function dashboard()
     {
         $user = Auth::user();
+        $now = now();
 
-        $users = User::with('role:id,nom')
-                     ->select('id', 'nom', 'prenom', 'email', 'role_id')
-                     ->paginate(10);
-
-        $formationsStats = [
-            'labels' => ['Jan', 'Fév', 'Mar', 'Avr', 'Mai'],
-            'data' => [10, 15, 8, 20, 18]
+        $stats = [
+            'formationsPassees' => Formation::where('date_fin', '<', $now)->count(),
+            'formationsEnCours' => Formation::where('date_debut', '<=', $now)->where('date_fin', '>=', $now)->count(),
+            'formationsAVenir' => Formation::where('date_debut', '>', $now)->count(),
         ];
 
-        $participationStats = [
-            'labels' => ['Formation A', 'Formation B', 'Formation C'],
-            'data' => [50, 30, 40]
+        $commentaires = Comment::latest()->take(5)->get();
+
+        switch ($user->role_id) {
+            case Role::ADMIN:
+                $directions = Direction::withCount('services')->get();
+                $services = Service::all();
+                $totalFormations = Formation::count();
+                $totalFormateurs = User::where('role_id', Role::FORMATEUR)->count();
+                $totalParticipants = User::where('role_id', Role::PARTICIPANT)->count();
+                $totalServices = Service::count();
+                $users = User::orderBy('nom')->paginate(10);
+                $roles = Role::whereIn('id', [Role::ADMIN, Role::FORMATEUR, Role::PARTICIPANT])->get();
+                $formations = Formation::all();
+
+                return view('dashboard', compact(
+                    'user', 'stats', 'commentaires',
+                    'directions', 'services',
+                    'totalFormations', 'totalFormateurs',
+                    'totalParticipants', 'totalServices',
+                    'users', 'roles',
+                    'formations'
+                ));
+
+            case Role::FORMATEUR:
+                $formations = $user->formationsFormateur ?? collect();
+                return view('dashboard', compact('user', 'stats', 'commentaires', 'formations'));
+
+            case Role::PARTICIPANT:
+                $formations = $user->formationsParticipant ?? collect();
+                return view('dashboard', compact('user', 'stats', 'commentaires', 'formations'));
+
+            default:
+                abort(403, 'Rôle non autorisé.');
+        }
+    }
+
+    /**
+     * Statistiques par direction
+     */
+    public function directionStats(Direction $direction)
+    {
+        $formations = Formation::where('direction_id', $direction->id)->get();
+        $services = $direction->services()->withCount('formations')->get();
+
+        return view('admin.directions.stats', compact('direction', 'formations', 'services'));
+    }
+
+    /**
+     * Statistiques globales
+     */
+    public function globalStats()
+    {
+        $stats = [
+            'totalUtilisateurs' => User::count(),
+            'totalFormateurs' => User::where('role_id', Role::FORMATEUR)->count(),
+            'totalParticipants' => User::where('role_id', Role::PARTICIPANT)->count(),
+            'totalFormations' => Formation::count(),
+            'totalServices' => Service::count(),
+            'totalCommentaires' => Comment::count(),
         ];
 
-        $comments = Comment::with('user:id,nom,prenom')
-                           ->latest()
-                           ->take(5)
-                           ->get();
-
-        // ✅ Directions avec couleurs (à adapter dynamiquement si besoin)
-        $directions = [
-            ['Informatique', 'primary'],
-            ['Ressources Humaines', 'success'],
-            ['Finances', 'warning'],
-            ['Logistique', 'danger'],
-        ];
-
-        return view('dashboard', compact(
-            'user',
-            'users',
-            'formationsStats',
-            'participationStats',
-            'comments',
-            'directions'
-        ));
+        return view('admin.statistiques.globales', compact('stats'));
     }
 }

@@ -1,79 +1,128 @@
-@extends('layouts.app')
-
-@section('title', 'Tableau de bord Admin')
-
-@section('content')
-<div class="container">
-    <h1 class="text-center text-primary my-4">Tableau de bord Administrateur</h1>
-
-    {{-- Liens rapides --}}
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <a href="{{ route('directions.create') }}" class="btn btn-outline-primary w-100 mb-2">➕ Ajouter une Direction</a>
-            <a href="{{ route('users.create') }}" class="btn btn-outline-info w-100">➕ Ajouter un Formateur</a>
-        </div>
-        <div class="col-md-4">
-            <a href="{{ route('formations.create') }}" class="btn btn-outline-success w-100 mb-2">➕ Ajouter une Formation</a>
-            <a href="{{ route('users.create') }}" class="btn btn-outline-secondary w-100">➕ Ajouter un Participant</a>
-        </div>
-        <div class="col-md-4">
-            <a href="{{ route('roles.index') }}" class="btn btn-outline-warning w-100">⚙️ Gérer les Rôles</a>
-        </div>
-    </div>
-
-    {{-- Statistiques --}}
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">📈 Formations par Mois</div>
+{{-- GESTION DES ÉLÉMENTS (Admin) --}}
+@if(Auth::user()->isAdmin())
+<div class="container mt-5">
+    <div class="row">
+        {{-- Directions --}}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-sitemap"></i> Directions</span>
+                    <a href="{{ route('directions.create') }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </a>
+                </div>
                 <div class="card-body">
-                    <canvas id="formationsChart" width="400" height="300"></canvas>
+                    <ul class="list-group">
+                        @foreach($directions as $direction)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $direction->nom }}
+                                <span>
+                                    <a href="{{ route('directions.edit', $direction->id) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                    <form action="{{ route('directions.destroy', $direction->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette direction ?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">👥 Taux de Participation</div>
+
+        {{-- Services --}}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-building"></i> Services</span>
+                    <a href="{{ route('services.create') }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </a>
+                </div>
                 <div class="card-body">
-                    <canvas id="participationChart" width="400" height="300"></canvas>
+                    <ul class="list-group">
+                        @foreach($services as $service)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $service->nom }}
+                                <span>
+                                    <a href="{{ route('services.edit', $service->id) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                    <form action="{{ route('services.destroy', $service->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce service ?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {{-- Formations --}}
+        <div class="col-md-12 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-book"></i> Formations</span>
+                    <a href="{{ route('formations.create') }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-plus"></i> Ajouter
+                    </a>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach($formations as $formation)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $formation->titre }}
+                                <span>
+                                    <a href="{{ route('formations.edit', $formation->id) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                                    <form action="{{ route('formations.destroy', $formation->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette formation ?')">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                                    </form>
+                                </span>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {{-- Formateurs --}}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-chalkboard-teacher"></i> Formateurs
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach($formateurs as $formateur)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $formateur->name }}
+                                <a href="{{ route('users.edit', $formateur->id) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        {{-- Participants --}}
+        <div class="col-md-6 mb-4">
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <i class="fas fa-user-graduate"></i> Participants
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        @foreach($participants as $participant)
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ $participant->name }}
+                                <a href="{{ route('users.edit', $participant->id) }}" class="btn btn-sm btn-warning"><i class="fas fa-edit"></i></a>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
         </div>
     </div>
 </div>
-@endsection
-
-@section('scripts')
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    const formationsCtx = document.getElementById('formationsChart').getContext('2d');
-    const formationsChart = new Chart(formationsCtx, {
-        type: 'bar',
-        data: {
-            labels: {!! json_encode($months ?? ['Jan', 'Feb', 'Mar']) !!},
-            datasets: [{
-                label: 'Formations',
-                data: {!! json_encode($formationsCount ?? [5, 10, 3]) !!},
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        }
-    });
-
-    const participationCtx = document.getElementById('participationChart').getContext('2d');
-    const participationChart = new Chart(participationCtx, {
-        type: 'pie',
-        data: {
-            labels: ['Participants', 'Absents'],
-            datasets: [{
-                data: {!! json_encode($participationData ?? [75, 25]) !!},
-                backgroundColor: ['rgba(75, 192, 192, 0.6)', 'rgba(255, 99, 132, 0.6)'],
-                borderWidth: 1
-            }]
-        }
-    });
-</script>
-@endsection
+@endif

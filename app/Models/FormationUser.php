@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -19,16 +18,20 @@ class FormationUser extends Pivot
 
     public $timestamps = true;
 
-    // Relations optionnelles (utiles pour accéder aux données associées depuis ce modèle)
+    /**
+     * Relation vers l'utilisateur associé
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function formation()
-    {
-        return $this->belongsTo(Formation::class);
-    }
+    /**
+     * Relation vers la formation associée
+     */
+   public function formations()
+{
+    return $this->belongsToMany(Formation::class, 'formation_user');
 }
 
-
+}

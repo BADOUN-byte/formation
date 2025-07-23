@@ -11,28 +11,29 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('formations', function (Blueprint $table) {
+        Schema::create('formations', function (Blueprint $table) {
             $table->id();
 
-            $table->string('titre');             // titre de la formation
+            $table->string('titre');             // Titre de la formation
             $table->text('description')->nullable();
 
-            $table->string('type');              // type (ex: Présentiel, distanciel, etc.)
+            $table->enum('type', ['présentiel', 'distanciel', 'hybride'])->default('présentiel');
             $table->string('lieu');
 
-            $table->date('date_debut');          // date début
-            $table->date('date_fin');            // date fin
+            $table->date('date_debut');
+            $table->date('date_fin');
 
-            $table->integer('volume_horaire');
+            $table->integer('volume_horaire');   // En heures
 
-            $table->string('statut')->nullable();
+            $table->enum('statut', ['en_attente', 'en_cours', 'terminée', 'annulée'])->default('en_attente');
 
             // Clés étrangères
             $table->foreignId('formateur_id')->constrained('users')->onDelete('cascade');
-            $table->foreignId('service_id')->constrained('services')->onDelete('cascade');
+            $table->foreignId('service_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('direction_id')->nullable()->constrained()->onDelete('cascade');
 
             $table->timestamps();
-       });
+        });
     }
 
     /**

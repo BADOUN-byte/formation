@@ -12,10 +12,20 @@ class Direction extends Model
     /**
      * Une direction a plusieurs services.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     * @return HasMany
      */
     public function services(): HasMany
     {
         return $this->hasMany(Service::class);
+    }
+
+    /**
+     * Une direction a plusieurs formations.
+     *
+     * @return HasMany
+     */
+    public function formations(): HasMany
+    {
+        return $this->hasMany(Formation::class);
     }
 }

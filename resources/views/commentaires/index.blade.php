@@ -18,12 +18,11 @@
             <form method="POST" action="{{ route('commentaires.store') }}">
                 @csrf
                 <div class="mb-3">
-                    <label for="titre" class="form-label">Titre</label>
-                    <input type="text" name="titre" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label for="description" class="form-label">Contenu</label>
-                    <textarea name="description" class="form-control" rows="4" required></textarea>
+                    <label for="contenu" class="form-label">Contenu</label>
+                    <textarea name="contenu" id="contenu" class="form-control @error('contenu') is-invalid @enderror" rows="4" required>{{ old('contenu') }}</textarea>
+                    @error('contenu')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
                 </div>
                 <button type="submit" class="btn btn-primary">Publier</button>
             </form>
@@ -36,8 +35,7 @@
         <div class="card-body">
             @forelse($commentaires as $comment)
                 <div class="border rounded p-3 mb-3">
-                    <h5>{{ $comment->titre }}</h5>
-                    <p>{{ $comment->description }}</p>
+                    <p>{{ $comment->contenu }}</p>
                     <small class="text-muted">
                         Posté par {{ $comment->user->prenom ?? 'Utilisateur inconnu' }} {{ $comment->user->nom ?? '' }}
                         le {{ $comment->created_at->format('d/m/Y à H:i') }}

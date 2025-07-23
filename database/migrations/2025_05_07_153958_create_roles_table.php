@@ -12,11 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('roles', function (Blueprint $table) {
-    $table->id();
-    $table->string('nom')->unique(); // Ex: admin, formateur, participant
-    $table->timestamps();
-});
+            // ID manuel pour permettre des IDs fixes dans les seeders (ex : Role::ADMIN = 1)
+            $table->unsignedBigInteger('id')->primary();
 
+            // Nom du rôle : ex. admin, formateur, participant
+            $table->string('nom')->unique();
+
+            $table->timestamps();
+        });
     }
 
     /**

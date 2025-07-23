@@ -10,29 +10,36 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+
             $table->string('nom');
             $table->string('prenom');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
             $table->string('matricule')->nullable();
             $table->string('grade')->nullable();
             $table->string('fonction')->nullable();
 
-            $table->foreignId('role_id')
-                ->constrained('roles') // on précise la table au cas où
-                ->onDelete('cascade');
-
+            // Clé étrangère vers services (nullable, null on delete)
             $table->foreignId('service_id')
                 ->nullable()
                 ->constrained('services')
-                ->nullOnDelete(); // plus lisible que onDelete('set null')
+                ->nullOnDelete();
 
-            $table->rememberToken(); // Pour la persistance des sessions
+            // Clé étrangère vers roles (non nullable, cascade on delete)
+            $table->foreignId('role_id')
+                ->constrained('roles')
+                ->cascadeOnDelete();
+
+            // Champ ajouté car utilisé dans seeders
+            $table->boolean('is_active')->default(true);
+
+            $table->rememberToken();
             $table->timestamps();
         });
 
-        Schema::create('password_reset_tokens', function (Blueprint $table) {
+        Schema::create('password_resets', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
@@ -41,7 +48,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('password_reset_tokens');
+        Schema::dropIfExists('password_resets');
         Schema::dropIfExists('users');
     }
 };

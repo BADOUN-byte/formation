@@ -9,40 +9,63 @@ use Illuminate\Support\Facades\Auth;
 class CommentController extends Controller
 {
     /**
-     * Affiche tous les commentaires (optionnel, pour les pages publiques ou admin)
+     * Affiche tous les commentaires (page d'administration ou publique)
      */
     public function index()
     {
-        $commentaires = Comment::with('user')->latest()->get();
+        $commentaires = Comment::with('user')->latest()->paginate(5);
+
         return view('commentaires.index', compact('commentaires'));
     }
 
     /**
-     * Enregistre un nouveau commentaire
+     * Enregistre un nouveau commentaire lié à une formation
      */
-    public function store(Request $request)
+    public function store(Request $request, ?int $formationId = null)
     {
         $request->validate([
-            'titre' => 'required|string|max:255',
             'contenu' => 'required|string',
         ]);
 
         Comment::create([
-            'titre' => $request->titre,
-            'contenu' => $request->contenu,
-            'user_id' => Auth::id(),
+            'contenu'      => $request->contenu,
+            'user_id'      => Auth::id(),
+            'formation_id' => $formationId,
         ]);
 
+        // Retour à la même page avec message succès
         return redirect()->back()->with('success', 'Commentaire ajouté avec succès.');
     }
 
     /**
-     * Supprime un commentaire (optionnel, par un admin ou l’auteur)
+     * Enregistre un nouveau commentaire global (pas lié à une formation)
+     */
+    public function storeGlobal(Request $request)
+    {
+        $request->validate([
+            'contenu' => 'required|string',
+        ]);
+
+        Comment::create([
+            'contenu'      => $request->contenu,
+            'user_id'      => Auth::id(),
+            'formation_id' => null,
+        ]);
+
+        // Retour à la même page avec message succès
+        return redirect()->back()->with('success', 'Commentaire global ajouté avec succès.');
+    }
+
+    /**
+     * Supprime un commentaire (admin ou auteur uniquement)
      */
     public function destroy(Comment $comment)
     {
-        if (Auth::id() === $comment->user_id || Auth::user()->role->name === 'admin') {
+        $user = Auth::user();
+
+        if ($user && ($user->id === $comment->user_id || $user->role?->name === 'admin')) {
             $comment->delete();
+
             return redirect()->back()->with('success', 'Commentaire supprimé.');
         }
 
